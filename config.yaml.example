@@ -1,0 +1,227 @@
+# GitBook Translator Configuration Example
+# This file demonstrates all available configuration options
+# Copy this file to config.yaml and customize for your needs
+
+# GitHub Repository Configuration
+repository:
+  # GitHub repository URL (required)
+  url: "https://github.com/user/repo"
+  
+  # Branch name to fetch files from (default: main)
+  branch: "main"
+  
+  # GitHub authentication token (optional, can also use GITHUB_TOKEN env var)
+  # Required for private repositories
+  token: "${GITHUB_TOKEN}"
+
+# File Selection Configuration
+files:
+  # Glob patterns for target files (required, can specify multiple)
+  # Examples:
+  #   - "docs/**/*.md"      # All Markdown files in docs directory
+  #   - "README.md"         # Specific file
+  #   - "**/*.md"           # All Markdown files recursively
+  target_paths:
+    - "docs/**/*.md"
+    - "README.md"
+    - "CONTRIBUTING.md"
+
+# Translation Configuration
+translation:
+  # Target languages for translation (required, can specify multiple)
+  # Supported language codes: en, zh-CN, zh-TW, ko, fr, de, es, ja, etc.
+  languages:
+    - "en"
+    - "zh-CN"
+    - "zh-TW"
+  
+  # Path to glossary JSON file (required)
+  # Contains technical term translations for consistency
+  glossary_path: "./glossary.json"
+  
+  # LLM provider configuration
+  llm:
+    # Translation provider: "openai" or "anthropic"
+    translation_provider: "openai"
+    
+    # Review provider: "openai", "anthropic", or "google"
+    review_provider: "google"
+    
+    # Translation model name
+    # OpenAI: "gpt-4", "gpt-3.5-turbo"
+    # Anthropic: "claude-3-opus", "claude-3-sonnet"
+    translation_model: "gpt-4"
+    
+    # Review model name
+    # OpenAI: "gpt-4", "gpt-3.5-turbo"
+    # Anthropic: "claude-3-opus", "claude-3-sonnet"
+    # Google: "gemini-pro", "gemini-pro-vision"
+    review_model: "gemini-pro"
+    
+    # Temperature for translation (0-1)
+    # Lower values = more deterministic, higher values = more creative
+    temperature: 0
+    
+    # API timeout in seconds
+    timeout: 300
+
+# Output Configuration
+output:
+  # Output directory for translated files (default: ./output)
+  root: "./output"
+  
+  # File naming convention
+  # Options:
+  #   - "suffix": Output as file.en.md, file.zh-CN.md
+  #   - "directory": Output as /en/file.md, /zh-CN/file.md
+  naming: "suffix"
+
+# GitHub Push Configuration
+github_push:
+  # Push strategy
+  # Options:
+  #   - "none": Save locally only (no GitHub operations)
+  #   - "push_same_repo_direct": Push to same branch (requires confirmation)
+  #   - "push_same_repo_new_branch": Create new branch and push automatically
+  option: "none"
+  
+  # Branch naming pattern for new branches
+  # Available variables: {lang}, {timestamp}
+  # Example: "translation/{lang}/{timestamp}"
+  branch_pattern: "translation/{lang}/{timestamp}"
+
+# Agent Configuration
+agent:
+  # Maximum number of agent actions (hard limit)
+  max_iterations: 50
+  
+  # Maximum correction loops per file
+  # Agent will attempt to correct issues up to this many times
+  max_correction_loops: 2
+  
+  # Translation timeout per file in seconds
+  translation_timeout: 300
+  
+  # File size limit in bytes (files exceeding this will be skipped)
+  max_file_size_bytes: 1048576  # 1MB
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Log file path (optional, logs to console if not specified)
+  file: "./gitbook-translator.log"
+  
+  # Enable detailed progress logging
+  verbose: false
+  
+  # Mask sensitive information in logs (API keys, tokens)
+  mask_sensitive: true
+
+# LangChain Tracing Configuration (optional)
+langchain:
+  # Enable LangChain tracing for debugging
+  tracing_enabled: false
+  
+  # LangChain API key (required if tracing_enabled is true)
+  api_key: "${LANGCHAIN_API_KEY}"
+  
+  # LangChain project name
+  project: "gitbook-translator"
+
+# Cache Configuration
+cache:
+  # Enable caching of file metadata to detect changes
+  enabled: true
+  
+  # Cache file path
+  file: ".gitbook-translator-cache.json"
+
+# Advanced Options
+advanced:
+  # Retry configuration
+  retry:
+    # Maximum number of retries for failed operations
+    max_attempts: 3
+    
+    # Initial backoff time in seconds
+    initial_backoff: 1
+    
+    # Maximum backoff time in seconds
+    max_backoff: 60
+  
+  # Rate limiting
+  rate_limit:
+    # Enable rate limiting for GitHub API
+    enabled: true
+    
+    # Requests per minute
+    requests_per_minute: 60
+  
+  # Parallel processing (experimental)
+  parallel:
+    # Enable parallel processing of files
+    enabled: false
+    
+    # Number of parallel workers
+    workers: 4
+
+# Example Configurations
+
+# Example 1: Basic translation to English
+# example_basic:
+#   repository:
+#     url: "https://github.com/user/docs"
+#     branch: "main"
+#   files:
+#     target_paths:
+#       - "docs/**/*.md"
+#   translation:
+#     languages:
+#       - "en"
+#     glossary_path: "./glossary.json"
+#   output:
+#     root: "./output"
+#     naming: "suffix"
+
+# Example 2: Multi-language translation with GitHub push
+# example_multilang:
+#   repository:
+#     url: "https://github.com/user/docs"
+#     branch: "main"
+#   files:
+#     target_paths:
+#       - "docs/**/*.md"
+#       - "README.md"
+#   translation:
+#     languages:
+#       - "en"
+#       - "zh-CN"
+#       - "zh-TW"
+#     glossary_path: "./glossary.json"
+#   output:
+#     root: "./translations"
+#     naming: "directory"
+#   github_push:
+#     option: "push_same_repo_new_branch"
+
+# Example 3: Development configuration with tracing
+# example_dev:
+#   repository:
+#     url: "https://github.com/user/docs"
+#     branch: "develop"
+#   files:
+#     target_paths:
+#       - "docs/**/*.md"
+#   translation:
+#     languages:
+#       - "en"
+#     glossary_path: "./glossary.json"
+#   output:
+#     root: "./output"
+#   logging:
+#     level: "DEBUG"
+#     verbose: true
+#   langchain:
+#     tracing_enabled: true

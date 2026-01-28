@@ -1,0 +1,154 @@
+{
+  "summary": {
+    "overall_passed": true,
+    "categories": {
+      "format_preservation": {
+        "passed": true,
+        "total_issues": 0,
+        "results": [
+          {
+            "language": "en",
+            "passed": true,
+            "issues": []
+          },
+          {
+            "language": "zh-CN",
+            "passed": true,
+            "issues": []
+          }
+        ]
+      },
+      "glossary_application": {
+        "passed": true,
+        "total_issues": 0,
+        "results": [
+          {
+            "language": "en",
+            "passed": true,
+            "issues": []
+          },
+          {
+            "language": "zh-CN",
+            "passed": true,
+            "issues": []
+          }
+        ]
+      },
+      "link_preservation": {
+        "passed": true,
+        "total_issues": 0,
+        "results": [
+          {
+            "language": "en",
+            "passed": true,
+            "issues": []
+          },
+          {
+            "language": "zh-CN",
+            "passed": true,
+            "issues": []
+          }
+        ]
+      },
+      "image_preservation": {
+        "passed": true,
+        "total_issues": 0,
+        "results": [
+          {
+            "language": "en",
+            "passed": true,
+            "issues": []
+          },
+          {
+            "language": "zh-CN",
+            "passed": true,
+            "issues": []
+          }
+        ]
+      },
+      "overall_quality": {
+        "passed": true,
+        "total_issues": 0,
+        "results": [
+          {
+            "language": "en",
+            "passed": true,
+            "issues": []
+          },
+          {
+            "language": "zh-CN",
+            "passed": true,
+            "issues": []
+          }
+        ]
+      }
+    },
+    "languages_tested": [
+      "en",
+      "zh-CN"
+    ],
+    "total_issues": 0
+  },
+  "detailed_results": {
+    "format_preservation": [
+      {
+        "language": "en",
+        "passed": true,
+        "issues": []
+      },
+      {
+        "language": "zh-CN",
+        "passed": true,
+        "issues": []
+      }
+    ],
+    "glossary_application": [
+      {
+        "language": "en",
+        "passed": true,
+        "issues": []
+      },
+      {
+        "language": "zh-CN",
+        "passed": true,
+        "issues": []
+      }
+    ],
+    "link_preservation": [
+      {
+        "language": "en",
+        "passed": true,
+        "issues": []
+      },
+      {
+        "language": "zh-CN",
+        "passed": true,
+        "issues": []
+      }
+    ],
+    "image_preservation": [
+      {
+        "language": "en",
+        "passed": true,
+        "issues": []
+      },
+      {
+        "language": "zh-CN",
+        "passed": true,
+        "issues": []
+      }
+    ],
+    "overall_quality": [
+      {
+        "language": "en",
+        "passed": true,
+        "issues": []
+      },
+      {
+        "language": "zh-CN",
+        "passed": true,
+        "issues": []
+      }
+    ]
+  }
+}

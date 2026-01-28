@@ -1,0 +1,78 @@
+{
+  "test_repository": {
+    "name": "gitbook-translator-test-repo",
+    "description": "Test repository for GitBook Translator end-to-end testing",
+    "files": [
+      "README.md",
+      "docs/basic-features.md",
+      "docs/advanced-features.md",
+      "docs/api-reference.md",
+      "docs/troubleshooting.md",
+      "docs/images/sample.png",
+      "LICENSE"
+    ],
+    "features": [
+      "YAML frontmatter",
+      "GitBook-specific syntax (hints, tabs)",
+      "Code blocks (multiple languages)",
+      "Inline code",
+      "Tables",
+      "Links (internal, external, anchor)",
+      "Images",
+      "HTML elements",
+      "Template expressions",
+      "Mixed Japanese and non-Japanese content",
+      "Technical terms and product names",
+      "Complex nested structures"
+    ]
+  },
+  "test_scenarios": [
+    {
+      "name": "basic_translation",
+      "description": "Basic translation of a single file to English",
+      "target_files": ["README.md"],
+      "target_languages": ["en"],
+      "expected_features": [
+        "Japanese text translated to English",
+        "Code blocks preserved",
+        "Links preserved",
+        "Format preserved"
+      ]
+    },
+    {
+      "name": "multi_language",
+      "description": "Translation to multiple languages",
+      "target_files": ["docs/basic-features.md"],
+      "target_languages": ["en", "zh-CN", "zh-TW"],
+      "expected_features": [
+        "All languages generated",
+        "Glossary terms applied consistently",
+        "GitBook syntax preserved"
+      ]
+    },
+    {
+      "name": "complex_features",
+      "description": "Translation of files with complex GitBook features",
+      "target_files": ["docs/advanced-features.md", "docs/api-reference.md"],
+      "target_languages": ["en"],
+      "expected_features": [
+        "YAML frontmatter preserved",
+        "Tables structure maintained",
+        "Code blocks in multiple languages preserved",
+        "GitBook hints and tabs preserved",
+        "HTML elements preserved"
+      ]
+    },
+    {
+      "name": "error_scenarios",
+      "description": "Test error handling and recovery",
+      "target_files": ["nonexistent.md"],
+      "target_languages": ["en"],
+      "expected_behavior": [
+        "Graceful error handling",
+        "Detailed error messages",
+        "Continued processing of other files"
+      ]
+    }
+  ]
+}

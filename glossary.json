@@ -1,0 +1,34 @@
+{
+  "terms": [
+    {
+      "ja": "帳票定義",
+      "en": "Template Form",
+      "zh-CN": "报表定义",
+      "zh-TW": "表單定義"
+    },
+    {
+      "ja": "翻訳",
+      "en": "Translation",
+      "zh-CN": "翻译",
+      "zh-TW": "翻譯"
+    },
+    {
+      "ja": "ドキュメント",
+      "en": "Document",
+      "zh-CN": "文档",
+      "zh-TW": "文件"
+    },
+    {
+      "ja": "システム",
+      "en": "System",
+      "zh-CN": "系统",
+      "zh-TW": "系統"
+    },
+    {
+      "ja": "ユーザー",
+      "en": "User",
+      "zh-CN": "用户",
+      "zh-TW": "使用者"
+    }
+  ]
+}
