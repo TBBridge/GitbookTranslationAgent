@@ -288,7 +288,7 @@ The CLI does not advertise Anthropic support.
 The worker runs as a long-lived local process:
 
 ```text
-gitbook-translator worker --server-url ... --worker-name office-mac
+gitbook-translator worker --config ./worker.toml
 ```
 
 Local worker configuration contains:
@@ -359,6 +359,12 @@ queued -> leased -> running -> succeeded
 - Session ID hash.
 - Creation, expiration, and last-used timestamps.
 - Revocation timestamp.
+
+### `admin_login_attempts`
+
+- Hashed client-address bucket.
+- Attempt timestamp and success flag.
+- Periodic expiry so login throttling remains bounded.
 
 ### `workers`
 
