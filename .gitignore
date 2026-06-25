@@ -25,6 +25,7 @@ venv/
 env/
 ENV/
 .venv
+.worktrees/
 
 # Environment variables
 .env
