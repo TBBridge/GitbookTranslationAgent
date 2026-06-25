@@ -7,7 +7,7 @@ name = "gitbook-translator"
 version = "0.1.0"
 description = "AI Agent-based GitBook documentation translator"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "langchain>=0.1.0",
     "langchain-openai>=0.0.5",
@@ -26,6 +26,10 @@ test = [
 
 [project.scripts]
 gitbook-translator = "gitbook_translator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gitbook_translator*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
