@@ -30,6 +30,45 @@ def test_normalize_repository_url_rejects_paths_without_exact_owner_repo(value):
 @pytest.mark.parametrize(
     "value",
     [
+        "https://github.com/acme/..",
+        "https://github.com/./docs",
+        "https://github.com/acme/%2e%2e",
+        "https://github.com/%2e/docs",
+    ],
+)
+def test_normalize_repository_url_rejects_raw_and_encoded_dot_segments(value):
+    with pytest.raises(ValueError):
+        normalize_repository_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "https://github.com/acme/docs%2Fextra",
+        "https://github.com/acme/docs%5Cextra",
+        "https://github.com/acme/docs%3Bextra",
+    ],
+)
+def test_normalize_repository_url_rejects_decoded_separators_and_semicolons(value):
+    with pytest.raises(ValueError):
+        normalize_repository_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "https://token@github.com/acme/docs",
+        "https://user:pass@github.com/acme/docs",
+    ],
+)
+def test_normalize_repository_url_rejects_embedded_credentials(value):
+    with pytest.raises(ValueError):
+        normalize_repository_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
         "https://github.com/acme/docs?tab=readme",
         "https://github.com/acme/docs#readme",
         "https://github.com/acme/docs;download",

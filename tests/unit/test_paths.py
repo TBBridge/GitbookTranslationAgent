@@ -12,7 +12,7 @@ def test_resolve_output_directory_uses_language_subdirectory(tmp_path):
 
 @pytest.mark.parametrize(
     "language",
-    ["", "   ", "en/us", "en\\us", "C:en", ".", ".."],
+    ["", "   ", "en/us", "en\\us", "C:en", ".", "..", "en\n"],
 )
 def test_resolve_output_rejects_unsafe_language_components(tmp_path, language):
     with pytest.raises(ValueError):

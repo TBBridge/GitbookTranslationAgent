@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import unquote, urlparse, urlunparse
 
 
 def normalize_repository_url(value: str) -> str:
@@ -14,6 +14,8 @@ def normalize_repository_url(value: str) -> str:
     parsed = urlparse(repository_url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("repository URL must be an absolute HTTP(S) URL")
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError("repository URL must not include credentials")
     if parsed.params or parsed.query or parsed.fragment:
         raise ValueError("repository URL must not include params, query, or fragment")
     if ";" in parsed.path:
@@ -29,6 +31,12 @@ def normalize_repository_url(value: str) -> str:
     path_segments = relative_path.split("/")
     if len(path_segments) != 2 or any(not segment for segment in path_segments):
         raise ValueError("repository URL must include exactly an owner and repository path")
+    for segment in path_segments:
+        decoded_segment = unquote(segment)
+        if segment in {".", ".."} or decoded_segment in {".", ".."}:
+            raise ValueError("repository URL owner and repository segments must not be '.' or '..'")
+        if any(character in decoded_segment for character in {"/", "\\", ";"}):
+            raise ValueError("repository URL owner and repository segments must not include separators")
 
     return urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))
 

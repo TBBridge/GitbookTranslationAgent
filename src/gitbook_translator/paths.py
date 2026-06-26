@@ -31,6 +31,8 @@ def _safe_language_component(language: str) -> str:
     component = language.strip()
     if not component:
         raise ValueError("language is required")
+    if any(ord(character) < 32 or ord(character) == 127 for character in language):
+        raise ValueError("language must not contain control characters")
     if "/" in component or "\\" in component:
         raise ValueError("language must be a single path component")
     if PureWindowsPath(component).drive:
