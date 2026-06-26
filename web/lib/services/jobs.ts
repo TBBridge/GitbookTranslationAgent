@@ -119,6 +119,21 @@ export class MemoryAdminJobStore implements AdminJobStore {
     this.jobLogs.set(jobId, [...(this.jobLogs.get(jobId) ?? []), log]);
     return log;
   }
+
+  markCompleted(jobId: string, state: AdminJobState) {
+    const job = this.jobs.get(jobId);
+    if (!job) {
+      return null;
+    }
+    const updated: AdminJob = {
+      ...job,
+      state,
+      updatedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString()
+    };
+    this.jobs.set(jobId, updated);
+    return updated;
+  }
 }
 
 export class DatabaseAdminJobStore implements AdminJobStore {
@@ -219,6 +234,16 @@ export async function retryAdminJob(jobId: string) {
     enqueueForE2EWorker(job);
   }
   return job;
+}
+
+export async function syncE2EJobCompletion(jobId: string, state: AdminJobState) {
+  if (process.env.E2E_IN_MEMORY !== "1") {
+    return;
+  }
+  const store = getAdminJobStore();
+  if (store instanceof MemoryAdminJobStore) {
+    store.markCompleted(jobId, state);
+  }
 }
 
 function enqueueForE2EWorker(job: AdminJob) {

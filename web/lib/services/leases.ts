@@ -164,6 +164,7 @@ export class MemoryLeaseStore implements LeaseStore {
     attempt.result = input.result;
     job.state = finalState;
     job.completedAt = new Date();
+    await syncE2EJobCompletion(input.jobId, finalState);
     return {
       accepted: true as const,
       acknowledgedSequence: input.lastSequence ?? undefined
@@ -382,6 +383,14 @@ function finalStateFromResult(status: string) {
 
 function randomToken() {
   return randomBytes(32).toString("base64url");
+}
+
+async function syncE2EJobCompletion(jobId: string, state: string) {
+  if (process.env.E2E_IN_MEMORY !== "1") {
+    return;
+  }
+  const { syncE2EJobCompletion: sync } = await import("@/lib/services/jobs");
+  await sync(jobId, state as "succeeded" | "failed" | "cancelled");
 }
 
 function e2eMemoryLeaseStore() {
