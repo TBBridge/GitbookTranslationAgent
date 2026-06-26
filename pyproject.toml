@@ -9,10 +9,10 @@ description = "AI Agent-based GitBook documentation translator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "langchain>=0.1.0",
-    "langchain-openai>=0.0.5",
-    "langchain-community>=0.0.20",
     "PyGithub>=2.1.1",
+    "google-genai>=1.0,<3",
+    "httpx>=0.27,<1",
+    "openai>=1.0,<3",
     "python-dotenv>=1.0.0",
     "pydantic>=2.5.0",
 ]
