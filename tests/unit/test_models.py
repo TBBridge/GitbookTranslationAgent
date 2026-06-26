@@ -32,6 +32,7 @@ def test_run_status_derives_exit_code():
     assert RunStatus.SUCCEEDED.exit_code == 0
     assert RunStatus.FAILED.exit_code == 1
     assert RunStatus.PARTIAL.exit_code == 2
+    assert RunStatus.CANCELLED.exit_code == 2
 
 
 def test_models_round_trip_through_json():
