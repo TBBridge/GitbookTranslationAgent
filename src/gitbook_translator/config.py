@@ -16,6 +16,8 @@ def normalize_repository_url(value: str) -> str:
         raise ValueError("repository URL must be an absolute HTTP(S) URL")
     if parsed.username is not None or parsed.password is not None:
         raise ValueError("repository URL must not include credentials")
+    if any(delimiter in repository_url for delimiter in {"?", "#", ";"}):
+        raise ValueError("repository URL must not include params, query, or fragment")
     if parsed.params or parsed.query or parsed.fragment:
         raise ValueError("repository URL must not include params, query, or fragment")
     if ";" in parsed.path:

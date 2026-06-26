@@ -70,8 +70,11 @@ def test_normalize_repository_url_rejects_embedded_credentials(value):
     "value",
     [
         "https://github.com/acme/docs?tab=readme",
+        "https://github.com/acme/docs?",
         "https://github.com/acme/docs#readme",
+        "https://github.com/acme/docs#",
         "https://github.com/acme/docs;download",
+        "https://github.com/acme/docs;",
         "https://github.com/acme;param/docs",
     ],
 )
