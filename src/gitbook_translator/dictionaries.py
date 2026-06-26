@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+
+_SAFE_LANGUAGE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]*$")
 
 
 class DictionaryNotFoundError(FileNotFoundError):
@@ -23,6 +27,9 @@ class LoadedDictionary:
 
 def dictionary_filename(language: str) -> str:
     """Return the normalized filename for a language-specific dictionary."""
+
+    if not _SAFE_LANGUAGE_RE.fullmatch(language):
+        raise ValueError(f"Unsafe dictionary language: {language!r}")
 
     return f"dictionary_{language.lower()}.json"
 
