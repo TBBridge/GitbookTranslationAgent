@@ -11,10 +11,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 ProviderRole = Literal["translate", "review"]
 
 
+def _snake_to_camel(value: str) -> str:
+    parts = value.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
+
+
 class WorkerModel(BaseModel):
     """Base model for worker contracts."""
 
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(
+        alias_generator=lambda value: _snake_to_camel(value),
+        extra="forbid",
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
 
 
 class WorkerDictionarySet(WorkerModel):
@@ -97,13 +107,90 @@ class WorkerConfig(WorkerModel):
         return self
 
 
+class RegisterResponse(WorkerModel):
+    """Control-plane response after worker registration."""
+
+    worker_id: str = Field(min_length=1)
+
+
+class WorkerJobConfig(WorkerModel):
+    """Versioned job configuration created by the web control plane."""
+
+    schema_version: int = 1
+    repo_url: str = Field(min_length=1)
+    branch: str = Field(default="main", min_length=1)
+    target_paths: list[str] = Field(min_length=1)
+    languages: list[str] = Field(min_length=1)
+    dictionary_set: str = Field(min_length=1)
+    output_root: str = Field(min_length=1)
+    cache_root: str | None = Field(default=None, min_length=1)
+    translation_provider: str = Field(min_length=1)
+    review_provider: str | None = Field(default=None, min_length=1)
+
+
+class ClaimedJob(WorkerModel):
+    """One exclusively leased translation job."""
+
+    job_id: str = Field(min_length=1)
+    lease_id: str = Field(min_length=1)
+    lease_expires_at: str = Field(min_length=1)
+    config: WorkerJobConfig
+
+
+class ClaimResponse(WorkerModel):
+    """Result of a claim attempt. ``job`` is absent when the queue is empty."""
+
+    job: ClaimedJob | None = None
+
+
+class HeartbeatResponse(WorkerModel):
+    """Control-plane heartbeat acknowledgement."""
+
+    accepted: bool = True
+
+
+class RenewResponse(WorkerModel):
+    """Lease-renewal acknowledgement."""
+
+    accepted: bool = True
+    lease_expires_at: str | None = Field(default=None, min_length=1)
+
+
+class UpdateAck(WorkerModel):
+    """Acknowledgement for delivered progress events."""
+
+    acknowledged_sequence: int = Field(default=0, ge=0)
+
+
+class CancellationState(WorkerModel):
+    """Current cancellation state for a leased job."""
+
+    cancelled: bool = False
+
+
+class CompleteResponse(WorkerModel):
+    """Acknowledgement for job completion."""
+
+    accepted: bool = True
+    acknowledged_sequence: int | None = Field(default=None, ge=0)
+
+
 __all__ = [
+    "CancellationState",
+    "ClaimResponse",
+    "ClaimedJob",
+    "CompleteResponse",
     "DictionarySetCapability",
+    "HeartbeatResponse",
     "ProviderCapability",
     "ProviderRole",
+    "RegisterResponse",
+    "RenewResponse",
+    "UpdateAck",
     "WorkerCapabilities",
     "WorkerConfig",
     "WorkerDictionarySet",
+    "WorkerJobConfig",
     "WorkerModel",
     "WorkerProviderConfig",
 ]

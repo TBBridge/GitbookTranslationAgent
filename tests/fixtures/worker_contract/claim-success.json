@@ -1,0 +1,18 @@
+{
+  "job": {
+    "jobId": "job-1",
+    "leaseId": "lease-1",
+    "leaseExpiresAt": "2026-06-26T00:05:00Z",
+    "config": {
+      "schemaVersion": 1,
+      "repoUrl": "https://github.com/acme/docs",
+      "branch": "main",
+      "targetPaths": ["docs/**/*.md"],
+      "languages": ["en"],
+      "dictionarySet": "default",
+      "outputRoot": "default",
+      "translationProvider": "ollama-local",
+      "reviewProvider": null
+    }
+  }
+}
