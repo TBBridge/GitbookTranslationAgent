@@ -27,6 +27,7 @@ from gitbook_translator.verification import VerificationIssue, verify_translatio
 
 
 Emit = Callable[[ProgressEvent], None]
+CancelProbe = Callable[[], bool]
 Verifier = Callable[[str, str, dict[str, str], str], list[VerificationIssue]]
 
 
@@ -64,12 +65,17 @@ class TranslationPipeline:
         self,
         job: TranslationJob,
         emit: Emit | None = None,
+        should_cancel: CancelProbe | None = None,
     ) -> PipelineResult:
         emit = emit or (lambda event: None)
+        should_cancel = should_cancel or (lambda: False)
         results: list[FileLanguageResult] = []
         issues: list[TranslationIssue] = []
 
         self._stage("validate", emit)
+        if should_cancel():
+            self._stage("complete", emit)
+            return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
 
         self._stage("fetch", emit)
         fetch_result = self.source.fetch(job.target_paths, job.branch)
@@ -77,10 +83,16 @@ class TranslationPipeline:
         if not fetch_result.files:
             self._stage("complete", emit)
             return PipelineResult(status=RunStatus.FAILED, results=[], issues=issues)
+        if should_cancel():
+            self._stage("complete", emit)
+            return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
 
         self._stage("dictionary", emit)
         dictionaries: dict[str, LoadedDictionary] = {}
         for language in job.languages:
+            if should_cancel():
+                self._stage("complete", emit)
+                return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
             try:
                 dictionaries[language] = self.dictionary_loader(job.dictionary_path, language)
             except Exception as exc:
@@ -106,6 +118,9 @@ class TranslationPipeline:
         candidates: list[_TranslationCandidate] = []
         for source_file in fetch_result.files:
             for language in job.languages:
+                if should_cancel():
+                    self._stage("complete", emit)
+                    return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
                 if language not in dictionaries:
                     continue
                 try:
@@ -139,6 +154,9 @@ class TranslationPipeline:
         self._stage("verify", emit)
         verified: list[_TranslationCandidate] = []
         for candidate in candidates:
+            if should_cancel():
+                self._stage("complete", emit)
+                return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
             verification_issues = self.verifier(
                 candidate.source_file.content,
                 candidate.content,
@@ -167,6 +185,9 @@ class TranslationPipeline:
 
         self._stage("save", emit)
         for candidate in verified:
+            if should_cancel():
+                self._stage("complete", emit)
+                return PipelineResult(status=RunStatus.CANCELLED, results=results, issues=issues)
             output_path = resolve_output_path(
                 job.output_root,
                 candidate.source_file.path,
