@@ -14,6 +14,20 @@ from gitbook_translator.models import (
 )
 
 
+def _translation_job_kwargs(**overrides):
+    kwargs = {
+        "repo_url": "https://github.com/acme/docs",
+        "branch": "main",
+        "target_paths": ["docs"],
+        "languages": ["en"],
+        "dictionary_path": Path("dictionaries/default"),
+        "output_root": Path("translated"),
+        "translation_provider": ProviderSpec(provider="ollama", model="qwen3"),
+    }
+    kwargs.update(overrides)
+    return kwargs
+
+
 def test_run_status_derives_exit_code():
     assert RunStatus.SUCCEEDED.exit_code == 0
     assert RunStatus.FAILED.exit_code == 1
@@ -71,3 +85,13 @@ def test_models_round_trip_through_json():
 def test_provider_spec_rejects_blank_identifiers():
     with pytest.raises(ValidationError):
         ProviderSpec(provider=" ", model="qwen3")
+
+
+def test_translation_job_rejects_blank_target_path_entries():
+    with pytest.raises(ValidationError):
+        TranslationJob(**_translation_job_kwargs(target_paths=[" "]))
+
+
+def test_translation_job_rejects_blank_language_entries():
+    with pytest.raises(ValidationError):
+        TranslationJob(**_translation_job_kwargs(languages=[" "]))

@@ -2,8 +2,12 @@
 
 from enum import Enum
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+_NonBlankString = Annotated[str, Field(min_length=1)]
 
 
 class ContractModel(BaseModel):
@@ -41,8 +45,8 @@ class TranslationJob(ContractModel):
 
     repo_url: str = Field(min_length=1)
     branch: str = Field(default="main", min_length=1)
-    target_paths: list[str] = Field(min_length=1)
-    languages: list[str] = Field(min_length=1)
+    target_paths: list[_NonBlankString] = Field(min_length=1)
+    languages: list[_NonBlankString] = Field(min_length=1)
     dictionary_path: Path
     output_root: Path
     translation_provider: ProviderSpec
