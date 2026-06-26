@@ -15,8 +15,9 @@ def resolve_output_path(
     if output_mode != "directory":
         raise ValueError("unsupported output mode")
 
+    language_component = _safe_language_component(language)
     source = _safe_relative_source_path(source_path)
-    generated = Path(output_root) / language / Path(*source.parts)
+    generated = Path(output_root) / language_component / Path(*source.parts)
 
     root = Path(output_root).resolve()
     candidate = generated.resolve()
@@ -24,6 +25,20 @@ def resolve_output_path(
         raise ValueError("output path escapes configured root")
 
     return candidate
+
+
+def _safe_language_component(language: str) -> str:
+    component = language.strip()
+    if not component:
+        raise ValueError("language is required")
+    if "/" in component or "\\" in component:
+        raise ValueError("language must be a single path component")
+    if PureWindowsPath(component).drive:
+        raise ValueError("language must not include a Windows drive")
+    if component in {".", ".."}:
+        raise ValueError("language must not be '.' or '..'")
+
+    return component
 
 
 def _safe_relative_source_path(source_path: str) -> PurePosixPath:

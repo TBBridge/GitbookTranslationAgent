@@ -15,6 +15,31 @@ def test_normalize_repository_url(value, expected):
     assert normalize_repository_url(value) == expected
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "https://github.com/acme",
+        "https://github.com/acme/docs/tree/main",
+    ],
+)
+def test_normalize_repository_url_rejects_paths_without_exact_owner_repo(value):
+    with pytest.raises(ValueError):
+        normalize_repository_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "https://github.com/acme/docs?tab=readme",
+        "https://github.com/acme/docs#readme",
+        "https://github.com/acme/docs;download",
+    ],
+)
+def test_normalize_repository_url_rejects_params_query_and_fragment(value):
+    with pytest.raises(ValueError):
+        normalize_repository_url(value)
+
+
 def test_branch_allows_slashes():
     assert validate_branch("release/v1.0") == "release/v1.0"
 

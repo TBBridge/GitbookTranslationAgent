@@ -10,6 +10,15 @@ def test_resolve_output_directory_uses_language_subdirectory(tmp_path):
     )
 
 
+@pytest.mark.parametrize(
+    "language",
+    ["", "   ", "en/us", "en\\us", "C:en", ".", ".."],
+)
+def test_resolve_output_rejects_unsafe_language_components(tmp_path, language):
+    with pytest.raises(ValueError):
+        resolve_output_path(tmp_path, "docs/guide.md", language, "directory")
+
+
 @pytest.mark.parametrize("source", ["../escape.md", "/tmp/x.md", "C:\\x.md", "C:/x.md"])
 def test_resolve_output_rejects_escape(tmp_path, source):
     with pytest.raises(ValueError):

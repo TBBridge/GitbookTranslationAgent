@@ -14,12 +14,19 @@ def normalize_repository_url(value: str) -> str:
     parsed = urlparse(repository_url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("repository URL must be an absolute HTTP(S) URL")
+    if parsed.params or parsed.query or parsed.fragment:
+        raise ValueError("repository URL must not include params, query, or fragment")
 
     path = parsed.path.rstrip("/")
     if path.endswith(".git"):
         path = path[:-4]
     if not path or path == "/":
         raise ValueError("repository URL must include an owner and repository path")
+
+    relative_path = path[1:] if path.startswith("/") else path
+    path_segments = relative_path.split("/")
+    if len(path_segments) != 2 or any(not segment for segment in path_segments):
+        raise ValueError("repository URL must include exactly an owner and repository path")
 
     return urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))
 
