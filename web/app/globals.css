@@ -102,3 +102,141 @@ p {
   font-weight: 800;
   cursor: pointer;
 }
+
+.admin-layout,
+.stack {
+  display: grid;
+  gap: 24px;
+}
+
+.top-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.top-nav a {
+  color: var(--foreground);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.page-header {
+  display: grid;
+  gap: 12px;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 18px 50px rgba(23, 32, 51, 0.06);
+}
+
+.panel.compact {
+  gap: 6px;
+  padding: 16px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.form-grid label {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.form-grid input,
+.form-grid select {
+  width: 100%;
+  padding: 11px 12px;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font: inherit;
+}
+
+.form-grid button {
+  align-self: end;
+  padding: 12px 18px;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 800;
+}
+
+.form-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.status-row,
+.worker-list,
+.job-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 6px 10px;
+  color: #174125;
+  background: #dff8e7;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.status-pill.warning {
+  color: #6f3b00;
+  background: #ffe8bd;
+}
+
+.log-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.log-list li,
+.job-list li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.log-list span {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.log-list pre {
+  overflow: auto;
+  padding: 12px;
+  background: #111827;
+  color: #f8fafc;
+  border-radius: 12px;
+}
+
+.empty-state {
+  padding: 18px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+}

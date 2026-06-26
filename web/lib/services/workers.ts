@@ -26,6 +26,7 @@ export interface WorkerStore {
   upsert(input: UpsertWorkerInput): Promise<WorkerRecord>;
   heartbeat(input: UpsertWorkerInput & { workerId: string }): Promise<WorkerRecord>;
   findByName(name: string): Promise<WorkerRecord | null>;
+  list(): Promise<WorkerRecord[]>;
 }
 
 let workerStoreForTests: WorkerStore | null = null;
@@ -79,6 +80,16 @@ export class DatabaseWorkerStore implements WorkerStore {
     `;
     return rows[0] ? workerFromRow(rows[0] as WorkerRow) : null;
   }
+
+  async list() {
+    const rows = await this.sql`
+      SELECT *
+      FROM workers
+      ORDER BY last_heartbeat_at DESC, name ASC
+      LIMIT 100
+    `;
+    return rows.map((row) => workerFromRow(row as WorkerRow));
+  }
 }
 
 export class MemoryWorkerStore implements WorkerStore {
@@ -118,6 +129,10 @@ export class MemoryWorkerStore implements WorkerStore {
 
   async findByName(name: string) {
     return this.workers.get(name) ?? null;
+  }
+
+  async list() {
+    return [...this.workers.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 }
 
