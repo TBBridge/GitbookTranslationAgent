@@ -15,6 +15,11 @@ from gitbook_translator.config import normalize_repository_url, validate_branch
 from gitbook_translator.github_client import GitHubSource
 from gitbook_translator.models import PipelineResult, ProviderSpec, TranslationJob
 from gitbook_translator.pipeline import TranslationPipeline
+from gitbook_translator.worker.client import WorkerControlPlaneClient
+from gitbook_translator.worker.config import load_worker_config
+from gitbook_translator.worker.models import WorkerConfig, WorkerProviderConfig
+from gitbook_translator.worker.outbox import Outbox
+from gitbook_translator.worker.runner import WorkerRunner
 
 
 COMMANDS = {"translate", "worker"}
@@ -71,9 +76,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     worker = subparsers.add_parser(
         "worker",
-        help="Run local worker mode (implemented in the worker phase).",
+        help="Run local worker mode.",
     )
-    worker.add_argument("--config", help="Worker configuration file.")
+    worker.add_argument("--config", required=True, help="Worker configuration file.")
+    worker.add_argument(
+        "--once",
+        action="store_true",
+        help="Run one polling cycle, then exit.",
+    )
 
     return parser
 
@@ -96,8 +106,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return int(exc.code)
 
     if args.command == "worker":
-        print("Worker mode is reserved for the local worker phase.", file=sys.stderr)
-        return 2
+        try:
+            return run_worker(args)
+        except KeyboardInterrupt:
+            print("Worker stopped by user", file=sys.stderr)
+            return 130
+        except Exception as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
 
     if args.command != "translate":
         parser.print_help()
@@ -151,6 +167,62 @@ def run_translation(job: TranslationJob) -> PipelineResult:
 
     source = GitHubSource(_load_github_repository(job.repo_url))
     return TranslationPipeline(source=source).run(job)
+
+
+def run_worker(args: argparse.Namespace) -> int:
+    """Run the local worker process."""
+
+    config = load_worker_config(args.config)
+    token = os.environ.get(config.token_env)
+    if not token:
+        raise ValueError(f"{config.token_env} is required for worker mode")
+
+    validate_worker_provider_environment(config)
+    runner = WorkerRunner(
+        client=WorkerControlPlaneClient(
+            server_url=config.server_url,
+            token=token,
+            timeout_seconds=config.request_timeout_seconds,
+        ),
+        pipeline=_build_worker_pipeline,
+        config=config,
+        outbox=Outbox(_worker_outbox_path(config, Path(args.config))),
+    )
+
+    if args.once:
+        result = runner.run_once()
+        render_summary(result)
+        return result.status.exit_code
+
+    runner.run_forever()
+    return 0
+
+
+def validate_worker_provider_environment(config: WorkerConfig) -> None:
+    for provider in config.providers:
+        validate_selected_provider_environment(_provider_spec_from_worker(provider))
+
+
+def _provider_spec_from_worker(provider: WorkerProviderConfig) -> ProviderSpec:
+    return ProviderSpec(
+        provider=provider.provider,
+        model=provider.model,
+        base_url=provider.base_url,
+    )
+
+
+def _build_worker_pipeline(job: TranslationJob) -> TranslationPipeline:
+    return TranslationPipeline(source=GitHubSource(_load_github_repository(job.repo_url)))
+
+
+def _worker_outbox_path(config: WorkerConfig, config_path: Path) -> Path:
+    if "default" in config.cache_roots:
+        root = config.cache_roots["default"]
+    elif config.cache_roots:
+        root = config.cache_roots[sorted(config.cache_roots)[0]]
+    else:
+        root = config_path.expanduser().resolve().parent / ".gitbook-translator-worker"
+    return root / "outbox.jsonl"
 
 
 def validate_selected_provider_environment(provider: ProviderSpec) -> None:
