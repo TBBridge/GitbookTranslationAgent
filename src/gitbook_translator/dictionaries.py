@@ -41,7 +41,10 @@ def load_dictionary(directory: str | Path, language: str) -> LoadedDictionary:
     if not path.is_file():
         raise DictionaryNotFoundError(f"Dictionary not found: {path}")
 
-    raw_terms = json.loads(path.read_text(encoding="utf-8"))
+    raw_terms = json.loads(
+        path.read_text(encoding="utf-8"),
+        object_pairs_hook=_reject_duplicate_keys,
+    )
     terms = _validate_terms(raw_terms, path)
     canonical = json.dumps(
         terms,
@@ -67,6 +70,15 @@ def _validate_terms(raw_terms: Any, path: Path) -> dict[str, str]:
         terms[key] = value
 
     return terms
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    data: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in data:
+            raise ValueError(f"Duplicate dictionary key: {key}")
+        data[key] = value
+    return data
 
 
 __all__ = [

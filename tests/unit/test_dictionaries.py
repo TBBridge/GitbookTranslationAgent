@@ -77,6 +77,16 @@ def test_load_dictionary_hashes_canonical_sorted_utf8_terms(tmp_path):
     assert loaded.sha256 == expected
 
 
+def test_load_dictionary_rejects_duplicate_terms(tmp_path):
+    (tmp_path / "dictionary_en.json").write_text(
+        '{"帳票定義":"Template Form","帳票定義":"Form Definition"}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Duplicate"):
+        load_dictionary(tmp_path, "en")
+
+
 def test_loader_never_falls_back_to_glossary(tmp_path):
     (tmp_path / "glossary.json").write_text(
         '{"翻訳":"Wrong"}',
