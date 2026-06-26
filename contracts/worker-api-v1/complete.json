@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "leaseId": "lease-token-1",
+  "lastSequence": 1,
+  "result": {
+    "status": "succeeded",
+    "results": [
+      {
+        "sourcePath": "docs/index.md",
+        "language": "en",
+        "status": "succeeded",
+        "outputPath": "/workspace/output/en/docs/index.md",
+        "cacheHit": false,
+        "issues": []
+      }
+    ],
+    "issues": []
+  }
+}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { languageTagSchema, safeNameSchema } from "@/lib/schemas/job-v1";
+import { jobV1Schema, languageTagSchema, safeNameSchema } from "@/lib/schemas/job-v1";
 
 export const providerRoleSchema = z.enum(["translate", "review"]);
 
@@ -42,6 +42,65 @@ export const workerCapabilitiesV1Schema = z
   });
 
 export type WorkerCapabilitiesV1 = z.infer<typeof workerCapabilitiesV1Schema>;
+
+export const workerRegisterRequestSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    capabilities: workerCapabilitiesV1Schema
+  })
+  .strict();
+
+export const workerClaimResponseSchema = z
+  .object({
+    job: z
+      .object({
+        jobId: z.string().min(1),
+        leaseId: z.string().min(1),
+        leaseExpiresAt: z.string().min(1),
+        config: jobV1Schema
+      })
+      .nullable()
+      .optional()
+  })
+  .strict();
+
+export const progressEventSchema = z
+  .object({
+    kind: z.string().min(1),
+    stage: z.string().min(1),
+    message: z.string().nullable().optional(),
+    current: z.number().int().nonnegative().nullable().optional(),
+    total: z.number().int().nonnegative().nullable().optional(),
+    filePath: z.string().nullable().optional(),
+    language: z.string().nullable().optional()
+  })
+  .strict();
+
+export const workerUpdatesRequestSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    leaseId: z.string().min(1),
+    firstSequence: z.number().int().positive(),
+    updates: z.array(progressEventSchema).min(1)
+  })
+  .strict();
+
+export const pipelineResultSchema = z
+  .object({
+    status: z.enum(["succeeded", "partial", "failed", "cancelled"]),
+    results: z.array(z.unknown()).default([]),
+    issues: z.array(z.unknown()).default([])
+  })
+  .passthrough();
+
+export const workerCompleteRequestSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    leaseId: z.string().min(1),
+    lastSequence: z.number().int().nonnegative().nullable().optional(),
+    result: pipelineResultSchema
+  })
+  .strict();
 
 export function workerCapabilitiesFixture(
   overrides: Partial<WorkerCapabilitiesV1> = {}

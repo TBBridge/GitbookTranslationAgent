@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from gitbook_translator.models import PipelineResult, ProgressEvent
+
 
 ProviderRole = Literal["translate", "review"]
 
@@ -113,6 +115,13 @@ class RegisterResponse(WorkerModel):
     worker_id: str = Field(min_length=1)
 
 
+class RegisterRequest(WorkerModel):
+    """Worker registration request."""
+
+    schema_version: int = 1
+    capabilities: WorkerCapabilities
+
+
 class WorkerJobConfig(WorkerModel):
     """Versioned job configuration created by the web control plane."""
 
@@ -126,6 +135,8 @@ class WorkerJobConfig(WorkerModel):
     cache_root: str | None = Field(default=None, min_length=1)
     translation_provider: str = Field(min_length=1)
     review_provider: str | None = Field(default=None, min_length=1)
+    push_strategy: str = Field(default="none", min_length=1)
+    confirm_direct_push: bool = False
 
 
 class ClaimedJob(WorkerModel):
@@ -162,6 +173,15 @@ class UpdateAck(WorkerModel):
     acknowledged_sequence: int = Field(default=0, ge=0)
 
 
+class UpdatesRequest(WorkerModel):
+    """Progress update delivery request."""
+
+    schema_version: int = 1
+    lease_id: str = Field(min_length=1)
+    first_sequence: int = Field(ge=1)
+    updates: list[ProgressEvent] = Field(min_length=1)
+
+
 class CancellationState(WorkerModel):
     """Current cancellation state for a leased job."""
 
@@ -175,18 +195,30 @@ class CompleteResponse(WorkerModel):
     acknowledged_sequence: int | None = Field(default=None, ge=0)
 
 
+class CompleteRequest(WorkerModel):
+    """Job completion request."""
+
+    schema_version: int = 1
+    lease_id: str = Field(min_length=1)
+    last_sequence: int | None = Field(default=None, ge=0)
+    result: PipelineResult
+
+
 __all__ = [
     "CancellationState",
     "ClaimResponse",
     "ClaimedJob",
+    "CompleteRequest",
     "CompleteResponse",
     "DictionarySetCapability",
     "HeartbeatResponse",
     "ProviderCapability",
     "ProviderRole",
+    "RegisterRequest",
     "RegisterResponse",
     "RenewResponse",
     "UpdateAck",
+    "UpdatesRequest",
     "WorkerCapabilities",
     "WorkerConfig",
     "WorkerDictionarySet",

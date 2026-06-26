@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "capabilities": {
+    "schemaVersion": 1,
+    "workerName": "office-mac",
+    "dictionarySets": {
+      "default": {
+        "languages": ["en", "zh-CN"]
+      }
+    },
+    "outputRoots": ["default"],
+    "providers": [
+      {
+        "name": "ollama-local",
+        "provider": "ollama",
+        "model": "qwen3",
+        "roles": ["translate", "review"]
+      }
+    ]
+  }
+}

@@ -122,7 +122,7 @@ class WorkerControlPlaneClient:
                 "leaseId": lease_id,
                 "firstSequence": first_sequence,
                 "updates": [
-                    event.model_dump(mode="json", exclude_none=True)
+                    event.model_dump(mode="json", by_alias=True, exclude_none=True)
                     for event in updates
                 ],
             },
@@ -160,7 +160,7 @@ class WorkerControlPlaneClient:
                 "schemaVersion": 1,
                 "leaseId": lease_id,
                 "lastSequence": last_sequence,
-                "result": result.model_dump(mode="json", exclude_none=True),
+                "result": result.model_dump(mode="json", by_alias=True, exclude_none=True),
             },
             CompleteResponse,
             idempotency_key=True,

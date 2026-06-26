@@ -10,10 +10,20 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 _NonBlankString = Annotated[str, Field(min_length=1)]
 
 
+def _snake_to_camel(value: str) -> str:
+    parts = value.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
+
+
 class ContractModel(BaseModel):
     """Base configuration for serialized public contracts."""
 
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(
+        alias_generator=_snake_to_camel,
+        extra="forbid",
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
 
 
 class RunStatus(str, Enum):
