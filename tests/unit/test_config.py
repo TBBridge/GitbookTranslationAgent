@@ -33,6 +33,7 @@ def test_normalize_repository_url_rejects_paths_without_exact_owner_repo(value):
         "https://github.com/acme/docs?tab=readme",
         "https://github.com/acme/docs#readme",
         "https://github.com/acme/docs;download",
+        "https://github.com/acme;param/docs",
     ],
 )
 def test_normalize_repository_url_rejects_params_query_and_fragment(value):

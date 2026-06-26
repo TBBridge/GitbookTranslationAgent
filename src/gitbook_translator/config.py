@@ -16,6 +16,8 @@ def normalize_repository_url(value: str) -> str:
         raise ValueError("repository URL must be an absolute HTTP(S) URL")
     if parsed.params or parsed.query or parsed.fragment:
         raise ValueError("repository URL must not include params, query, or fragment")
+    if ";" in parsed.path:
+        raise ValueError("repository URL must not include params, query, or fragment")
 
     path = parsed.path.rstrip("/")
     if path.endswith(".git"):
