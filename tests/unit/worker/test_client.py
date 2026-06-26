@@ -93,6 +93,18 @@ def test_claim_parses_versioned_job(httpx_mock, worker_client):
     assert claim.job.config.translation_provider == "ollama-local"
 
 
+def test_claim_204_returns_no_job(httpx_mock, worker_client):
+    httpx_mock.add_response(
+        method="POST",
+        url="https://control.test/api/worker/v1/claim",
+        status_code=204,
+    )
+
+    claim = worker_client.claim(worker_id="w1", capabilities=CAPABILITIES)
+
+    assert claim.job is None
+
+
 def test_complete_posts_versioned_result(httpx_mock, worker_client):
     httpx_mock.add_response(
         method="POST",

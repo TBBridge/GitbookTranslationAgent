@@ -218,6 +218,8 @@ class WorkerControlPlaneClient:
     ) -> _ResponseT:
         if response.status_code >= 400:
             raise ControlPlaneError(_failure_message(response))
+        if response.status_code == 204:
+            return response_model.model_validate({})
         try:
             payload = response.json()
         except ValueError as exc:
