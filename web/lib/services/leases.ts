@@ -70,7 +70,7 @@ export class MemoryLeaseStore implements LeaseStore {
   private readonly jobs = new Map<string, MemoryJob>();
   private readonly attempts = new Map<string, MemoryAttempt>();
 
-  enqueue(config: JobV1, id = randomUUID()) {
+  enqueue(config: JobV1, id: string = randomUUID()) {
     this.jobs.set(id, {
       id,
       state: "queued",
@@ -364,6 +364,9 @@ export function setLeaseStoreForTests(store: LeaseStore | null) {
 }
 
 export function getLeaseStore() {
+  if (process.env.E2E_IN_MEMORY === "1") {
+    return e2eMemoryLeaseStore();
+  }
   return leaseStoreForTests ?? new DatabaseLeaseStore();
 }
 
@@ -379,4 +382,12 @@ function finalStateFromResult(status: string) {
 
 function randomToken() {
   return randomBytes(32).toString("base64url");
+}
+
+function e2eMemoryLeaseStore() {
+  const stores = globalThis as typeof globalThis & {
+    __gitbookLeases?: MemoryLeaseStore;
+  };
+  stores.__gitbookLeases ??= new MemoryLeaseStore();
+  return stores.__gitbookLeases;
 }

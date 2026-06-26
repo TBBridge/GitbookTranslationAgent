@@ -42,10 +42,24 @@ export function requireSameOriginMutation(request: Request) {
   }
 
   const origin = request.headers.get("origin");
-  const expectedOrigin = new URL(request.url).origin;
-  if (origin !== expectedOrigin) {
+  const expectedOrigins = expectedRequestOrigins(request);
+  if (!origin || !expectedOrigins.has(origin)) {
     return Response.json({ error: "Cross-origin mutation rejected" }, { status: 403 });
   }
 
   return null;
+}
+
+function expectedRequestOrigins(request: Request) {
+  const url = new URL(request.url);
+  const origins = new Set([url.origin]);
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (host) {
+    const proto =
+      request.headers.get("x-forwarded-proto") ??
+      url.protocol.replace(/:$/, "") ??
+      "https";
+    origins.add(`${proto}://${host}`);
+  }
+  return origins;
 }

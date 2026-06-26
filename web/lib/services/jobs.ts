@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { getSql, type SqlClient } from "@/lib/db/client";
 import type { JobLogRow, JobRow } from "@/lib/db/types";
 import { jobV1Schema, type JobV1 } from "@/lib/schemas/job-v1";
+import { getLeaseStore, MemoryLeaseStore } from "@/lib/services/leases";
 
 export type AdminJobState =
   | "queued"
@@ -196,11 +197,16 @@ export function setAdminJobStoreForTests(store: AdminJobStore | null) {
 }
 
 export function getAdminJobStore() {
+  if (process.env.E2E_IN_MEMORY === "1") {
+    return e2eMemoryAdminJobStore();
+  }
   return adminJobStoreForTests ?? new DatabaseAdminJobStore();
 }
 
 export async function createAdminJob(config: unknown) {
-  return getAdminJobStore().create(jobV1Schema.parse(config));
+  const job = await getAdminJobStore().create(jobV1Schema.parse(config));
+  enqueueForE2EWorker(job);
+  return job;
 }
 
 export async function getJobById(jobId: string) {
@@ -208,7 +214,21 @@ export async function getJobById(jobId: string) {
 }
 
 export async function retryAdminJob(jobId: string) {
-  return getAdminJobStore().retry(jobId);
+  const job = await getAdminJobStore().retry(jobId);
+  if (job) {
+    enqueueForE2EWorker(job);
+  }
+  return job;
+}
+
+function enqueueForE2EWorker(job: AdminJob) {
+  if (process.env.E2E_IN_MEMORY !== "1") {
+    return;
+  }
+  const leaseStore = getLeaseStore();
+  if (leaseStore instanceof MemoryLeaseStore) {
+    leaseStore.enqueue(job.config, job.id);
+  }
 }
 
 function jobFromRow(row: JobRow): AdminJob {
@@ -233,4 +253,12 @@ function logFromRow(row: JobLogRow): AdminJobLog {
     event: row.event,
     createdAt: new Date(row.created_at).toISOString()
   };
+}
+
+function e2eMemoryAdminJobStore() {
+  const stores = globalThis as typeof globalThis & {
+    __gitbookAdminJobs?: MemoryAdminJobStore;
+  };
+  stores.__gitbookAdminJobs ??= new MemoryAdminJobStore();
+  return stores.__gitbookAdminJobs;
 }

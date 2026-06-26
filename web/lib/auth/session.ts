@@ -94,6 +94,9 @@ export function setSessionStoreForTests(store: SessionStore | null) {
 }
 
 export function getSessionStore() {
+  if (process.env.E2E_IN_MEMORY === "1") {
+    return e2eMemorySessionStore();
+  }
   return sessionStoreForTests ?? new DatabaseSessionStore();
 }
 
@@ -184,4 +187,12 @@ export function safeEqualHash(a: string, b: string) {
 
 function randomToken() {
   return randomBytes(32).toString("base64url");
+}
+
+function e2eMemorySessionStore() {
+  const stores = globalThis as typeof globalThis & {
+    __gitbookAdminSessions?: MemorySessionStore;
+  };
+  stores.__gitbookAdminSessions ??= new MemorySessionStore();
+  return stores.__gitbookAdminSessions;
 }

@@ -141,6 +141,9 @@ export function setWorkerStoreForTests(store: WorkerStore | null) {
 }
 
 export function getWorkerStore() {
+  if (process.env.E2E_IN_MEMORY === "1") {
+    return e2eMemoryWorkerStore();
+  }
   return workerStoreForTests ?? new DatabaseWorkerStore();
 }
 
@@ -180,4 +183,12 @@ function workerFromRow(row: WorkerRow): WorkerRecord {
     capabilities: workerCapabilitiesV1Schema.parse(row.capabilities),
     lastHeartbeatAt: new Date(row.last_heartbeat_at)
   };
+}
+
+function e2eMemoryWorkerStore() {
+  const stores = globalThis as typeof globalThis & {
+    __gitbookWorkers?: MemoryWorkerStore;
+  };
+  stores.__gitbookWorkers ??= new MemoryWorkerStore();
+  return stores.__gitbookWorkers;
 }

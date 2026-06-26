@@ -3,7 +3,8 @@ import Link from "next/link";
 import { getAdminJobStore } from "@/lib/services/jobs";
 
 export default async function JobsPage() {
-  const jobs = process.env.DATABASE_URL ? await getAdminJobStore().list() : [];
+  const shouldReadStore = process.env.DATABASE_URL || process.env.E2E_IN_MEMORY === "1";
+  const jobs = shouldReadStore ? await getAdminJobStore().list() : [];
 
   return (
     <section className="stack">

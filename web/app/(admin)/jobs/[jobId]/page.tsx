@@ -8,8 +8,9 @@ export default async function JobDetailPage({
   params: Promise<{ jobId: string }>;
 }) {
   const { jobId } = await params;
-  const job = process.env.DATABASE_URL ? await getAdminJobStore().get(jobId) : null;
-  const logs = process.env.DATABASE_URL ? await getAdminJobStore().logs(jobId) : [];
+  const shouldReadStore = process.env.DATABASE_URL || process.env.E2E_IN_MEMORY === "1";
+  const job = shouldReadStore ? await getAdminJobStore().get(jobId) : null;
+  const logs = shouldReadStore ? await getAdminJobStore().logs(jobId) : [];
 
   if (!job) {
     return <p className="empty-state">Job not found.</p>;
