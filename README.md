@@ -1,4 +1,4 @@
-# GitBook Translation Agent
+# GitBook Translation Platform
 
 Deterministic GitBook/Markdown translation tooling with two entry points:
 
@@ -6,6 +6,52 @@ Deterministic GitBook/Markdown translation tooling with two entry points:
 - `gitbook-translator worker` for local execution of jobs created in the Vercel web control plane.
 
 The translator preserves Markdown structure, protected spans, links, code blocks, and GitBook syntax while using language-specific dictionaries from `dictionary_*.json` files.
+
+> **Note:** This project replaced its original LangChain ReAct agent with a
+> deterministic pipeline. Translation no longer relies on an LLM to orchestrate
+> the workflow; the LLM is called only for the translation, review, and
+> correction steps inside a fixed, auditable control flow.
+
+## Architecture
+
+The platform has three parts that communicate only through a single
+**versioned job schema** — the web app never runs translation itself.
+
+```text
+                 create / monitor jobs
+   Administrator ───────────────────────▶  ┌────────────────────────────┐
+   (browser)                                │  Web control plane (web/)  │
+                                            │  Next.js on Vercel         │
+                                            │  + Neon Postgres           │
+                                            │  queues jobs, leases work  │
+                                            └─────────────┬──────────────┘
+                                       lease / heartbeat / │ progress (HTTP, bearer token)
+                                       complete            ▼
+                                            ┌────────────────────────────┐
+   Local machine / on-prem  ──────────────▶│  Local worker              │
+   (Ollama, file output, GitHub token)     │  src/gitbook_translator/   │
+                                            │      worker/               │
+                                            └─────────────┬──────────────┘
+                                                          │ invokes
+                                                          ▼
+                                            ┌────────────────────────────┐
+                                            │  Deterministic pipeline    │
+                                            │  src/gitbook_translator/   │
+                                            │  validate→fetch→dictionary │
+                                            │  →translate→verify→save    │
+                                            └────────────────────────────┘
+```
+
+- **Python core** (`src/gitbook_translator/`): the deterministic pipeline,
+  markdown segment preservation, mechanical verification, fingerprint cache, and
+  lazy OpenAI/Gemini/Ollama provider adapters. Runnable standalone via the
+  `translate` CLI — no web app required.
+- **Local worker** (`src/gitbook_translator/worker/`): leases jobs from the
+  control plane and runs the pipeline locally, keeping long-running work and
+  local resources (Ollama, output files) off the serverless platform.
+- **Web control plane** (`web/`): a Next.js App Router app on Vercel backed by
+  Neon Postgres. It authenticates administrators and workers, queues jobs, and
+  safely leases them to workers; it does not perform translation.
 
 ## Requirements
 
@@ -136,3 +182,25 @@ See [docs/web-deployment.md](docs/web-deployment.md).
 .venv/bin/python -m pytest tests/unit tests/property tests/integration tests/contract -q
 cd web && npm run lint && npm run typecheck && npm run test:run && npm run build
 ```
+
+The web database migration test and the Playwright E2E suite require a real
+Postgres instance via `TEST_DATABASE_URL`; the Python cross-system E2E
+(`tests/e2e/`) runs against the real web API using an in-memory store
+(`E2E_IN_MEMORY=1`) and needs `web/` dependencies installed.
+
+## Repository layout
+
+```text
+src/gitbook_translator/   Python core pipeline, providers, and local worker
+dictionaries/default/     Language-specific dictionaries (dictionary_<lang>.json)
+web/                      Next.js + Neon control plane (Vercel)
+contracts/                Shared worker API contract fixtures
+tests/                    unit / property / integration / contract / e2e suites
+docs/                     Setup, deployment, and design documentation
+```
+
+## Documentation
+
+- [docs/worker-setup.md](docs/worker-setup.md) — configure and run the local worker.
+- [docs/web-deployment.md](docs/web-deployment.md) — deploy the control plane on Vercel + Neon.
+- [docs/migration-from-glossary.md](docs/migration-from-glossary.md) — migrate legacy glossaries to dictionaries.
