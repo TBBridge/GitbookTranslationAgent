@@ -40,12 +40,25 @@ node -e "const {hash}=require('@node-rs/argon2'); hash(process.argv[1]).then(con
 
 ## マイグレーション
 
-Vercel のデプロイでは自動実行されません。Neon に対して一度手動で実行してください。
+Vercel では、ビルドコマンドに `vercel-build`（`tsx scripts/migrate.ts && next build`）を用いており、**デプロイのたびにマイグレーションが自動実行**されます。ビルド環境の `DATABASE_URL`（＝そのデプロイの実行時と同一スコープ）に対して適用されるため、Neon のブランチ／環境スコープの不一致を防げます。冪等なので再実行しても安全です。
+
+> このため、Vercel に `DATABASE_URL` が設定されていれば、別途の手動実行は不要です。`DATABASE_URL` が未設定だとビルドが失敗します（意図的に大きく失敗させています）。
+
+ローカルや手動で適用したい場合:
 
 ```bash
 cd web
-DATABASE_URL=postgresql://... npm exec tsx scripts/migrate.ts
+DATABASE_URL=postgresql://... npm run migrate
+# または: DATABASE_URL=postgresql://... npm exec tsx scripts/migrate.ts
 ```
+
+### マイグレーションが効かない場合の切り分け
+
+実行時に `relation "..." does not exist`（`42P01`）が続く場合、流した DB とアプリが使う DB が異なる可能性があります。次を確認してください。
+
+- マイグレーションに使った `DATABASE_URL` が、Vercel の **Production スコープ**の `DATABASE_URL` と完全一致しているか。
+- Neon に複数ブランチがある場合、対象ブランチが一致しているか。
+- pooled（`-pooler`）/ direct のどちらでも同一 DB を指すため可。ブランチ違いに注意。
 
 Neon に対してテストを実行する場合:
 
