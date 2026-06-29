@@ -1,8 +1,8 @@
-# Migration from legacy glossary files
+# 旧来の用語集（glossary）ファイルからの移行
 
-Legacy single-file terminology should be converted to language-specific dictionary files.
+従来の単一ファイル形式の用語集は、言語別の辞書ファイルへ変換してください。
 
-Old style:
+旧形式:
 
 ```json
 {
@@ -16,7 +16,7 @@ Old style:
 }
 ```
 
-New style:
+新形式:
 
 ```text
 dictionaries/default/
@@ -40,4 +40,4 @@ dictionaries/default/
 }
 ```
 
-Use `--dictionary-path ./dictionaries/default` in CLI and worker configurations.
+CLI およびワーカーの設定では `--dictionary-path ./dictionaries/default` を指定してください。

@@ -1,41 +1,41 @@
-# Local worker setup
+# ローカルワーカーのセットアップ
 
-The local worker polls the Vercel control plane, leases one job at a time, runs the Python translation pipeline locally, and reports progress back to the web app.
+ローカルワーカーは Vercel コントロールプレーンをポーリングし、1 度に 1 件ずつジョブをリースして、Python の翻訳パイプラインをローカルで実行し、進捗を Web アプリへ報告します。
 
-## Configure
+## 設定
 
-Copy the example:
+サンプルをコピーします。
 
 ```bash
 cp worker.example.toml worker.toml
 ```
 
-Set a secret in your shell or `.env.local` equivalent:
+シェルまたは `.env.local` 相当の場所にシークレットを設定します。
 
 ```bash
 export WORKER_TOKEN="$(openssl rand -hex 32)"
 ```
 
-Use the same value as `WORKER_TOKEN` in Vercel.
+Vercel 側の `WORKER_TOKEN` と同じ値を使用してください。
 
-## Run
+## 実行
 
 ```bash
 gitbook-translator worker --config worker.toml
 ```
 
-Run one polling cycle:
+ポーリングを 1 サイクルだけ実行する場合:
 
 ```bash
 gitbook-translator worker --config worker.toml --once
 ```
 
-The worker advertises dictionary set names, output root names, provider names, models, and languages. It never sends local filesystem paths or provider secrets to the control plane.
+ワーカーは、辞書セット名・出力ルート名・プロバイダ名・モデル・言語を申告します。ローカルのファイルパスやプロバイダのシークレットをコントロールプレーンへ送信することは一切ありません。
 
-## Ollama boundary
+## Ollama の境界
 
-Ollama runs on your local machine. Keep `base_url` pointed at a trusted local endpoint such as `http://127.0.0.1:11434`; do not expose Ollama publicly without separate network authentication.
+Ollama はローカルマシン上で動作します。`base_url` は `http://127.0.0.1:11434` のような信頼できるローカルエンドポイントに向けたままにしてください。別途のネットワーク認証なしに Ollama を公開しないでください。
 
-## Output semantics
+## 出力の扱い
 
-The web app records job state and returned local output paths. Files remain on the worker machine under the configured output root.
+Web アプリはジョブの状態と返却されたローカル出力パスを記録します。ファイルは、設定された出力ルート配下のワーカーマシン上に残ります。

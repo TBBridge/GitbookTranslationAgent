@@ -1,28 +1,34 @@
-# Vercel and Neon deployment
+# Vercel と Neon へのデプロイ
 
-The web control plane is in `web/` and is designed for Vercel plus Neon Postgres.
+Web コントロールプレーンは `web/` にあり、Vercel と Neon Postgres を前提に設計されています。
 
-## Required environment variables
+## 必須の環境変数
 
-- `DATABASE_URL`: Neon Postgres connection string.
-- `ADMIN_PASSWORD_HASH`: Argon2id hash for the administrator password.
-- `WORKER_TOKEN`: shared bearer token for local workers.
+- `DATABASE_URL`: Neon Postgres の接続文字列。
+- `ADMIN_PASSWORD_HASH`: 管理者パスワードの Argon2id ハッシュ。
+- `WORKER_TOKEN`: ローカルワーカーが提示する共有 Bearer トークン。
 
-Generate an admin hash:
+任意:
+
+- `WORKER_TOKENS`: 複数ワーカー用の追加トークン。カンマ区切りのリスト、または JSON 配列/マップ。`WORKER_TOKEN` に加えて適用されます。
+
+管理者パスワードのハッシュを生成する:
 
 ```bash
 cd web
 node -e "const {hash}=require('@node-rs/argon2'); hash(process.argv[1]).then(console.log)" 'your-password'
 ```
 
-## Migrations
+## マイグレーション
+
+Vercel のデプロイでは自動実行されません。Neon に対して一度手動で実行してください。
 
 ```bash
 cd web
 DATABASE_URL=postgresql://... npm exec tsx scripts/migrate.ts
 ```
 
-For tests against Neon:
+Neon に対してテストを実行する場合:
 
 ```bash
 TEST_DATABASE_URL=postgresql://... npm test -- --run tests/db/migrations.test.ts
@@ -30,7 +36,7 @@ TEST_DATABASE_URL=postgresql://... npm test -- --run tests/db/migrations.test.ts
 
 ## Vercel
 
-Set the variables in the Vercel dashboard or with `vercel env add`. Then run:
+Vercel ダッシュボード、または `vercel env add` で環境変数を設定します。その後:
 
 ```bash
 cd web
@@ -38,4 +44,4 @@ npm run build
 vercel build
 ```
 
-Translation itself does not run in Vercel Functions. Local workers do the LLM work and call `/api/worker/v1/*`.
+翻訳処理そのものは Vercel Functions では実行されません。LLM を用いた処理はローカルワーカーが担い、`/api/worker/v1/*` を呼び出します。

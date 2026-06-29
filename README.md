@@ -1,69 +1,58 @@
-# GitBook Translation Platform
+# GitBook 翻訳プラットフォーム
 
-Deterministic GitBook/Markdown translation tooling with two entry points:
+GitBook/Markdown を決定的に翻訳するツール群です。2 つのエントリポイントを提供します。
 
-- `gitbook-translator translate` for direct CLI runs.
-- `gitbook-translator worker` for local execution of jobs created in the Vercel web control plane.
+- `gitbook-translator translate` — CLI から直接実行する。
+- `gitbook-translator worker` — Vercel 上の Web コントロールプレーンで作成されたジョブをローカルで実行する。
 
-The translator preserves Markdown structure, protected spans, links, code blocks, and GitBook syntax while using language-specific dictionaries from `dictionary_*.json` files.
+本ツールは、`dictionary_*.json` の言語別辞書を用いながら、Markdown の構造・保護領域・リンク・コードブロック・GitBook 構文をそのまま保持して翻訳します。
 
-> **Note:** This project replaced its original LangChain ReAct agent with a
-> deterministic pipeline. Translation no longer relies on an LLM to orchestrate
-> the workflow; the LLM is called only for the translation, review, and
-> correction steps inside a fixed, auditable control flow.
+> **補足:** 本プロジェクトは、当初の LangChain ReAct エージェントを決定的（deterministic）なパイプラインに置き換えました。ワークフローの進行を LLM に判断させることはなくなり、LLM は固定された監査可能な制御フローの中で「翻訳・レビュー・修正」のステップでのみ呼び出されます。
 
-## Architecture
+## アーキテクチャ
 
-The platform has three parts that communicate only through a single
-**versioned job schema** — the web app never runs translation itself.
+本プラットフォームは 3 つの部品で構成され、それらは単一の **バージョン付きジョブスキーマ** のみを介して連携します。Web アプリ自体は翻訳処理を一切実行しません。
 
 ```text
-                 create / monitor jobs
-   Administrator ───────────────────────▶  ┌────────────────────────────┐
-   (browser)                                │  Web control plane (web/)  │
-                                            │  Next.js on Vercel         │
+                 ジョブの作成 / 監視
+   管理者         ───────────────────────▶  ┌────────────────────────────┐
+   (ブラウザ)                                │  Web コントロールプレーン  │
+                                            │  (web/) Next.js on Vercel  │
                                             │  + Neon Postgres           │
-                                            │  queues jobs, leases work  │
+                                            │  ジョブのキュー/リース管理 │
                                             └─────────────┬──────────────┘
-                                       lease / heartbeat / │ progress (HTTP, bearer token)
-                                       complete            ▼
+                                       リース/ハートビート/ │ 進捗 (HTTP, Bearerトークン)
+                                       完了通知             ▼
                                             ┌────────────────────────────┐
-   Local machine / on-prem  ──────────────▶│  Local worker              │
-   (Ollama, file output, GitHub token)     │  src/gitbook_translator/   │
+   ローカル/オンプレ ─────────────────────▶│  ローカルワーカー          │
+   (Ollama, ファイル出力, GitHubトークン)   │  src/gitbook_translator/   │
                                             │      worker/               │
                                             └─────────────┬──────────────┘
-                                                          │ invokes
+                                                          │ 呼び出し
                                                           ▼
                                             ┌────────────────────────────┐
-                                            │  Deterministic pipeline    │
+                                            │  決定的パイプライン        │
                                             │  src/gitbook_translator/   │
                                             │  validate→fetch→dictionary │
                                             │  →translate→verify→save    │
                                             └────────────────────────────┘
 ```
 
-- **Python core** (`src/gitbook_translator/`): the deterministic pipeline,
-  markdown segment preservation, mechanical verification, fingerprint cache, and
-  lazy OpenAI/Gemini/Ollama provider adapters. Runnable standalone via the
-  `translate` CLI — no web app required.
-- **Local worker** (`src/gitbook_translator/worker/`): leases jobs from the
-  control plane and runs the pipeline locally, keeping long-running work and
-  local resources (Ollama, output files) off the serverless platform.
-- **Web control plane** (`web/`): a Next.js App Router app on Vercel backed by
-  Neon Postgres. It authenticates administrators and workers, queues jobs, and
-  safely leases them to workers; it does not perform translation.
+- **Python コア** (`src/gitbook_translator/`): 決定的パイプライン、Markdown セグメント保持、機械的検証、フィンガープリントキャッシュ、遅延ロード型の OpenAI/Gemini/Ollama プロバイダアダプタ。`translate` CLI で単体実行でき、Web アプリは不要です。
+- **ローカルワーカー** (`src/gitbook_translator/worker/`): コントロールプレーンからジョブをリースし、パイプラインをローカルで実行します。長時間処理やローカル資源（Ollama、出力ファイル）をサーバーレス環境から切り離して保持します。
+- **Web コントロールプレーン** (`web/`): Vercel 上で動く Next.js App Router アプリ。バックエンドは Neon Postgres。管理者とワーカーを認証し、ジョブをキューイングして安全にワーカーへリースします。翻訳処理自体は行いません。
 
-## Requirements
+## 必要要件
 
-- Python 3.11+
-- Node.js 20.9+ for the `web/` control plane
-- A GitHub token for private repositories
-- One translation provider:
-  - Ollama for local LLM execution
+- Python 3.11 以上
+- `web/` コントロールプレーン用に Node.js 20.9 以上
+- プライベートリポジトリ用の GitHub トークン
+- いずれか 1 つの翻訳プロバイダ:
+  - ローカル LLM 実行用の Ollama
   - OpenAI
   - Google Gemini
 
-## Install
+## インストール
 
 ```bash
 python -m venv .venv
@@ -71,16 +60,16 @@ python -m venv .venv
 pip install -e ".[test]"
 ```
 
-For the web app:
+Web アプリ:
 
 ```bash
 cd web
 npm install
 ```
 
-## Dictionary layout
+## 辞書の配置
 
-Use a directory containing one JSON file per target language:
+ターゲット言語ごとに 1 つの JSON ファイルを置いたディレクトリを使用します。
 
 ```text
 dictionaries/default/
@@ -89,7 +78,7 @@ dictionaries/default/
   dictionary_zh-tw.json
 ```
 
-Each file is a flat object:
+各ファイルはフラットなオブジェクトです。
 
 ```json
 {
@@ -98,9 +87,9 @@ Each file is a flat object:
 }
 ```
 
-## CLI examples
+## CLI の実行例
 
-Local Ollama:
+ローカル Ollama:
 
 ```bash
 gitbook-translator translate \
@@ -139,32 +128,32 @@ GOOGLE_API_KEY=... gitbook-translator translate \
   --model gemini-2.5-flash
 ```
 
-Exit codes:
+終了コード:
 
-- `0`: succeeded
-- `1`: failed
-- `2`: partial or cancelled
-- `130`: interrupted
+- `0`: 成功
+- `1`: 失敗
+- `2`: 部分成功 または キャンセル
+- `130`: 中断（Ctrl+C 等）
 
-## Local worker
+## ローカルワーカー
 
-The worker keeps long-running translation work on your machine while Vercel hosts only the control plane:
+ワーカーは長時間の翻訳処理を手元のマシンに留め、Vercel にはコントロールプレーンのみをホストさせます。
 
 ```bash
 WORKER_TOKEN=... gitbook-translator worker --config worker.example.toml
 ```
 
-Use `--once` for diagnostics:
+診断用に 1 回だけポーリングする場合は `--once`:
 
 ```bash
 gitbook-translator worker --config worker.example.toml --once
 ```
 
-See [docs/worker-setup.md](docs/worker-setup.md).
+詳細は [docs/worker-setup.md](docs/worker-setup.md) を参照してください。
 
-## Web control plane
+## Web コントロールプレーン
 
-The `web/` application is a Next.js App Router app for Vercel. It stores jobs, workers, sessions, leases, and logs in Neon Postgres.
+`web/` は Vercel 向けの Next.js App Router アプリです。ジョブ・ワーカー・セッション・リース・ログを Neon Postgres に保存します。
 
 ```bash
 cd web
@@ -174,33 +163,30 @@ npm run build
 npm run test:e2e
 ```
 
-See [docs/web-deployment.md](docs/web-deployment.md).
+詳細は [docs/web-deployment.md](docs/web-deployment.md) を参照してください。
 
-## Verification
+## 検証（テスト）
 
 ```bash
 .venv/bin/python -m pytest tests/unit tests/property tests/integration tests/contract -q
 cd web && npm run lint && npm run typecheck && npm run test:run && npm run build
 ```
 
-The web database migration test and the Playwright E2E suite require a real
-Postgres instance via `TEST_DATABASE_URL`; the Python cross-system E2E
-(`tests/e2e/`) runs against the real web API using an in-memory store
-(`E2E_IN_MEMORY=1`) and needs `web/` dependencies installed.
+Web の DB マイグレーションテストと Playwright E2E スイートは、`TEST_DATABASE_URL` 経由で実際の Postgres インスタンスを必要とします。Python のクロスシステム E2E（`tests/e2e/`）は、インメモリストア（`E2E_IN_MEMORY=1`）を使って実際の Web API に対して実行され、`web/` の依存関係のインストールが必要です。
 
-## Repository layout
+## リポジトリ構成
 
 ```text
-src/gitbook_translator/   Python core pipeline, providers, and local worker
-dictionaries/default/     Language-specific dictionaries (dictionary_<lang>.json)
-web/                      Next.js + Neon control plane (Vercel)
-contracts/                Shared worker API contract fixtures
-tests/                    unit / property / integration / contract / e2e suites
-docs/                     Setup, deployment, and design documentation
+src/gitbook_translator/   Python コアパイプライン・プロバイダ・ローカルワーカー
+dictionaries/default/     言語別辞書 (dictionary_<lang>.json)
+web/                      Next.js + Neon コントロールプレーン (Vercel)
+contracts/                ワーカー API 契約の共有フィクスチャ
+tests/                    unit / property / integration / contract / e2e スイート
+docs/                     セットアップ・デプロイ・設計のドキュメント
 ```
 
-## Documentation
+## ドキュメント
 
-- [docs/worker-setup.md](docs/worker-setup.md) — configure and run the local worker.
-- [docs/web-deployment.md](docs/web-deployment.md) — deploy the control plane on Vercel + Neon.
-- [docs/migration-from-glossary.md](docs/migration-from-glossary.md) — migrate legacy glossaries to dictionaries.
+- [docs/worker-setup.md](docs/worker-setup.md) — ローカルワーカーの設定と実行。
+- [docs/web-deployment.md](docs/web-deployment.md) — Vercel + Neon へのコントロールプレーンのデプロイ。
+- [docs/migration-from-glossary.md](docs/migration-from-glossary.md) — 旧来の用語集（glossary）から辞書への移行。
