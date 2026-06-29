@@ -2,6 +2,25 @@
 
 Web コントロールプレーンは `web/` にあり、Vercel と Neon Postgres を前提に設計されています。
 
+## Root Directory（最重要）
+
+このリポジトリのルートは Python プロジェクトで、`package.json` はルートではなく `web/` にあります。そのため Vercel の **Root Directory を `web` に設定**しないと、次のエラーになります。
+
+```text
+Error: No Next.js version detected. Make sure your package.json has "next" in
+either "dependencies" or "devDependencies". Also check your Root Directory
+setting matches the directory of your package.json file.
+```
+
+設定方法（Vercel ダッシュボード）:
+
+1. プロジェクトの **Settings → Build and Deployment**（インポート時は設定画面）を開く。
+2. **Root Directory** に `web` を指定して保存する。
+3. Framework Preset は `web` を基準に Next.js が自動検出される。
+4. 再デプロイ（Redeploy）する。
+
+Root Directory が `web` のとき、`web/vercel.json`・環境変数・`web/package.json` の設定がそのまま適用されます。なお Root Directory は `vercel.json` では指定できず、プロジェクト設定（またはインポート時）でのみ設定できます。
+
 ## 必須の環境変数
 
 - `DATABASE_URL`: Neon Postgres の接続文字列。
